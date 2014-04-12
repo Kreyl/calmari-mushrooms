@@ -1,0 +1,45 @@
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 23/03/2014 17:17:07
+
+BeginCmp
+TimeStamp = /532ED3E6;
+Reference = C1;
+ValeurCmp = 0.1u;
+IdModule  = CAP_0603;
+EndCmp
+
+BeginCmp
+TimeStamp = /532DF73F;
+Reference = Q1;
+ValeurCmp = LED_RGB;
+IdModule  = LED_HH5050_RGB;
+EndCmp
+
+BeginCmp
+TimeStamp = /532DF74E;
+Reference = Q2;
+ValeurCmp = LED_RGB_WS2812B;
+IdModule  = LED_WS2812B;
+EndCmp
+
+BeginCmp
+TimeStamp = /532ED892;
+Reference = XL1;
+ValeurCmp = CONN_3;
+IdModule  = SIL-3;
+EndCmp
+
+BeginCmp
+TimeStamp = /532ED8A1;
+Reference = XL2;
+ValeurCmp = CONN_3;
+IdModule  = SIL-3;
+EndCmp
+
+BeginCmp
+TimeStamp = /532ED359;
+Reference = XL3;
+ValeurCmp = CONN_1;
+IdModule  = SIL1_ROUND_1MM8;
+EndCmp
+
+EndListe
