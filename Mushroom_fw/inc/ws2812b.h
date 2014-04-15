@@ -17,7 +17,7 @@
 
 #if LED_WS_ENABLE
 
-#define LED_CNT         4
+#define LED_CNT         5
 #define RST_BIT_CNT     45 // 45 zero bits to produce reset
 #define DATA_BIT_CNT    (LED_CNT * 3 * 8)   // 3 channels 8 bit each
 #define TOTAL_BIT_CNT   (DATA_BIT_CNT + RST_BIT_CNT)

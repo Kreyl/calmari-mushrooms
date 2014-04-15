@@ -74,6 +74,12 @@ enum RiseFall_t {Rising, Falling};
 #define DMA_PRIORITY_HIGH       STM32_DMA_CR_PL(0b10)
 #define DMA_PRIORITY_VERYHIGH   STM32_DMA_CR_PL(0b11)
 
+// =========== Get uniq ID ============
+#define UNIQ_ID_BASE_ADDR       (uint32_t)(0x1FFFF7E8)
+static inline uint32_t GetUniqID32() {
+    return *((uint32_t*)(UNIQ_ID_BASE_ADDR + 4));   // offset=4: U_ID(63:32)
+}
+
 // ============================ Simple delay ===================================
 static inline void DelayLoop(volatile uint32_t ACounter) { while(ACounter--); }
 static inline void Delay_ms(uint32_t Ams) {

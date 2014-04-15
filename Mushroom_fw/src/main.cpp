@@ -33,8 +33,9 @@ int main(void) {
 #endif
 #if LED_WS_ENABLE
     LedWs.Init();
+//    LedWs.SetCommonColorSmoothly(clBlue, csmSimultaneously);
 #endif
-    Radio.Init();
+//    Radio.Init();
     App.PThd = chThdSelf();
     App.Init();
 
