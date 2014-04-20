@@ -15,15 +15,6 @@ LedWs_t LedWs;
 #define T1H_N       3
 #define T_TOTAL_N   18
 
-// DMA
-#define LED_DMA_STREAM  STM32_DMA1_STREAM5
-#define LED_DMA_MODE    DMA_PRIORITY_VERYHIGH \
-                        | STM32_DMA_CR_MSIZE_BYTE \
-                        | STM32_DMA_CR_PSIZE_HWORD \
-                        | STM32_DMA_CR_MINC     /* Memory pointer increase */ \
-                        | STM32_DMA_CR_DIR_M2P  /* Direction is memory to peripheral */ \
-                        | STM32_DMA_CR_TCIE     /* Enable Transmission Complete IRQ */
-
 extern "C" {
 // Wrapper for Tx Completed IRQ
 void LedTxcIrq(void *p, uint32_t flags) {
@@ -36,15 +27,16 @@ static inline void LedTmrCallback(void *p) { LedWs.ITmrHandler(); }
 
 void LedWs_t::Init() {
     // ==== Timer ====
-    // Remap T15CH2 to PB15
+#if defined LED_REMAP_TIM15 // Remap T15CH2 to PB15
     bool AfioWasEnabled = (RCC->APB2ENR & RCC_APB2ENR_AFIOEN);
     RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;     // Enable AFIO
     AFIO->MAPR2 |= AFIO_MAPR2_TIM15_REMAP;
     if (!AfioWasEnabled) RCC->APB2ENR &= ~RCC_APB2ENR_AFIOEN;
+#endif
     // Init tmr in PWM mode
-    TxTmr.Init(TIM15);
+    TxTmr.Init(LED_TMR);
     TxTmr.Enable();
-    TxTmr.InitPwm(GPIOB, 15, 2, invNotInverted, true);
+    TxTmr.InitPwm(LED_GPIO, LED_PIN, LED_TMR_CHNL, invNotInverted, true);
     TxTmr.SetTopValue(T_TOTAL_N);
     TxTmr.SetPwm(0);
     TxTmr.EnableDmaOnUpdate();

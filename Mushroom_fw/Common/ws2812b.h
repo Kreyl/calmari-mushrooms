@@ -13,8 +13,17 @@
 #include "hal.h"
 #include "kl_lib_f100.h"
 #include "color.h"
+// Define constants here
+#include "application.h"
 
-#define LED_CNT         5
+#define LED_DMA_MODE    DMA_PRIORITY_VERYHIGH \
+                        | STM32_DMA_CR_MSIZE_BYTE \
+                        | STM32_DMA_CR_PSIZE_HWORD \
+                        | STM32_DMA_CR_MINC     /* Memory pointer increase */ \
+                        | STM32_DMA_CR_DIR_M2P  /* Direction is memory to peripheral */ \
+                        | STM32_DMA_CR_TCIE     /* Enable Transmission Complete IRQ */
+
+// Bit Buffer
 #define RST_BIT_CNT     45 // 45 zero bits to produce reset
 #define DATA_BIT_CNT    (LED_CNT * 3 * 8)   // 3 channels 8 bit each
 #define TOTAL_BIT_CNT   (DATA_BIT_CNT + RST_BIT_CNT)
