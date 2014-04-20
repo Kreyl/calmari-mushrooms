@@ -8,7 +8,6 @@
 #include "ws2812b.h"
 #include "cmd_uart_f10x.h"
 
-#if LED_WS_ENABLE
 LedWs_t LedWs;
 
 // Tx timings
@@ -132,5 +131,3 @@ uint32_t LedWs_t::ICalcDelayClr() {
     if(DelayB > Rslt) Rslt = DelayB;
     return Rslt;
 }
-
-#endif

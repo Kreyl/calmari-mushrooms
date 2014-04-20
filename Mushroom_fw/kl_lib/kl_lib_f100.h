@@ -19,7 +19,7 @@ void __attribute__ ((weak)) _init(void)  {}
 
 }
 
-// =============================== General =====================================
+#if 1 // ============================ General ==================================
 #define PACKED __attribute__ ((__packed__))
 #ifndef countof
 #define countof(A)  (sizeof(A)/sizeof(A[0]))
@@ -51,7 +51,6 @@ enum BitOrder_t {boMSB, boLSB};
 enum LowHigh_t  {Low, High};
 enum RiseFall_t {Rising, Falling};
 
-
 // Simple pseudofunctions
 #define MAX(a, b)   (((a) > (b))? (a) : (b))
 #define TRIM_VALUE(v, Max)  { if(v > Max) v = Max; }
@@ -73,6 +72,7 @@ enum RiseFall_t {Rising, Falling};
 #define DMA_PRIORITY_MEDIUM     STM32_DMA_CR_PL(0b01)
 #define DMA_PRIORITY_HIGH       STM32_DMA_CR_PL(0b10)
 #define DMA_PRIORITY_VERYHIGH   STM32_DMA_CR_PL(0b11)
+#endif
 
 // =========== Get uniq ID ============
 #define UNIQ_ID_BASE_ADDR       (uint32_t)(0x1FFFF7E8)
@@ -80,14 +80,13 @@ static inline uint32_t GetUniqID32() {
     return *((uint32_t*)(UNIQ_ID_BASE_ADDR + 4));   // offset=4: U_ID(63:32)
 }
 
-// ============================ Simple delay ===================================
+#if 1 // =========================== Time ======================================
 static inline void DelayLoop(volatile uint32_t ACounter) { while(ACounter--); }
 static inline void Delay_ms(uint32_t Ams) {
     volatile uint32_t __ticks = (Clk.AHBFreqHz / 4000) * Ams;
     DelayLoop(__ticks);
 }
 
-#if 1 // =========================== Time ======================================
 static inline bool TimeElapsed(systime_t *PSince, uint32_t Delay_ms) {
     chSysLock();
     bool Rslt = (systime_t)(chTimeNow() - *PSince) > MS2ST(Delay_ms);
@@ -96,7 +95,8 @@ static inline bool TimeElapsed(systime_t *PSince, uint32_t Delay_ms) {
     return Rslt;
 }
 #endif
-// ===================== Single pin manipulations ==============================
+
+#if 1 // ================== Single pin manipulations ===========================
 enum PinOutMode_t {
     omPushPull  = 0,
     omOpenDrain = 1
@@ -202,6 +202,7 @@ static inline void PinSetupAlterFuncOutput(
         PGpioPort->CRH |= CnfMode << Offset;
     }
 }
+#endif
 
 // Disable JTAG, leaving SWD
 static inline void JtagDisable() {
@@ -227,7 +228,120 @@ public:
     void Off() { *PCCR = 0; }
 };
 
-// ================================= Timers ====================================
+#if 0 // ============================= FLASH ===================================
+#define FLASH_PAGE_SIZE     1024
+#define FLASH_KEY1          ((uint32_t)0x45670123)
+#define FLASH_KEY2          ((uint32_t)0xCDEF89AB)
+#define CR_LOCK_Set         ((uint32_t)0x00000080)
+#define CR_PER_Set          ((uint32_t)0x00000002)
+#define CR_PER_Reset        ((uint32_t)0x00001FFD)
+#define CR_STRT_Set         ((uint32_t)0x00000040)
+#define CR_PG_Set           ((uint32_t)0x00000001)
+#define CR_PG_Reset         ((uint32_t)0x00001FFE)
+#define EraseTimeout        ((uint32_t)0x000B0000)
+#define ProgramTimeout      ((uint32_t)0x00002000)
+
+// Use such constructions:
+const uint32_t MyBigUint __attribute__ ((section("MyFlash"), aligned(FLASH_PAGE_SIZE))) = 0x00040B04; // 00 BB GG RR
+Color_t *PSavedClr = (Color_t*)&MyBigUint;
+
+class Flsh_t {
+public:
+    void Unlock() {
+        FLASH->KEYR = FLASH_KEY1;
+        FLASH->KEYR = FLASH_KEY2;
+    }
+    void Lock(void) { FLASH->CR |= CR_LOCK_Set; }
+    void ClearFlag(uint32_t FLASH_FLAG) { FLASH->SR = FLASH_FLAG; }
+    uint8_t GetBank1Status(void) {
+        if(FLASH->SR & FLASH_SR_BSY) return BUSY;
+        else if(FLASH->SR & FLASH_SR_PGERR) return FAILURE;
+        else if(FLASH->SR & FLASH_SR_WRPRTERR) return FAILURE;
+        else return OK;
+    }
+    uint8_t WaitForLastOperation(uint32_t Timeout) {
+        uint8_t status = OK;
+        // Wait for a Flash operation to complete or a TIMEOUT to occur
+        do {
+            status = GetBank1Status();
+            Timeout--;
+        } while((status == BUSY) and (Timeout != 0x00));
+        if(Timeout == 0x00) status = TIMEOUT;
+        return status;
+    }
+
+    uint8_t ErasePage(uint32_t PageAddress) {
+        uint8_t status = WaitForLastOperation(EraseTimeout);
+        if(status == OK) {
+            FLASH->CR |= CR_PER_Set;
+            FLASH->AR = PageAddress;
+            FLASH->CR |= CR_STRT_Set;
+            // Wait for last operation to be completed
+            status = WaitForLastOperation(EraseTimeout);
+            // Disable the PER Bit
+            FLASH->CR &= CR_PER_Reset;
+        }
+        return status;
+    }
+
+    uint8_t ProgramWord(uint32_t Address, uint32_t Data) {
+        uint8_t status = WaitForLastOperation(ProgramTimeout);
+        if(status == OK) {
+            FLASH->CR |= CR_PG_Set; // program the new first half word
+            *(__IO uint16_t*)Address = (uint16_t)Data;
+            /* Wait for last operation to be completed */
+            status = WaitForLastOperation(ProgramTimeout);
+            if(status == OK) {
+                // program the new second half word
+                uint32_t tmp = Address + 2;
+                *(__IO uint16_t*)tmp = Data >> 16;
+                /* Wait for last operation to be completed */
+                status = WaitForLastOperation(ProgramTimeout);
+                /* Disable the PG Bit */
+                FLASH->CR &= CR_PG_Reset;
+            }
+            else FLASH->CR &= CR_PG_Reset;  // Disable the PG Bit
+        }
+        return status;
+    }
+
+    void Load(Color_t *PClr) {
+        PClr->Red = PSavedClr->Red;
+        PClr->Green = PSavedClr->Green;
+        PClr->Blue = PSavedClr->Blue;
+    }
+    void Save(Color_t *PClr) {
+        uint8_t status = OK;
+        uint32_t FAddr = (uint32_t)&MyBigUint;
+        Unlock();
+        // Erase flash
+        ClearFlag(FLASH_SR_EOP | FLASH_SR_PGERR | FLASH_SR_WRPRTERR);   // Clear All pending flags
+        status = ErasePage(FAddr);
+        //klPrintf("  Flash erase %u: %u\r", i, FLASHStatus);
+        if(status != OK) {
+            Uart.Printf("  Flash erase error\r");
+            return;
+        }
+        uint32_t *PRAM = (uint32_t*)PClr;    // What to write
+        uint32_t DataWordCount = (sizeof(Color_t) + 3) / 4;
+        chSysLock();
+        for(uint32_t i=0; i<DataWordCount; i++) {
+            status = ProgramWord(FAddr, *PRAM);
+            if(status != OK) {
+                Uart.Printf("  Flash write error\r");
+                return;
+            }
+            //else klPrintf("#");
+            FAddr += 4;
+            PRAM++;
+        }
+        Lock();
+        chSysUnlock();
+    }
+};
+#endif
+
+#if 1 // ============================= Timers ==================================
 enum TmrTrigInput_t {tiITR0=0x00, tiITR1=0x10, tiITR2=0x20, tiITR3=0x30, tiTIED=0x40, tiTI1FP1=0x50, tiTI2FP2=0x60, tiETRF=0x70};
 enum TmrMasterMode_t {mmReset=0x00, mmEnable=0x10, mmUpdate=0x20, mmComparePulse=0x30, mmCompare1=0x40, mmCompare2=0x50, mmCompare3=0x60, mmCompare4=0x70};
 enum TmrSlaveMode_t {smDisable=0, smEncoder1=1, smEncoder2=2, smEncoder3=3, smReset=4, smGated=5, smTrigger=6, smExternal=7};
@@ -281,6 +395,7 @@ public:
     void InitPwm(GPIO_TypeDef *GPIO, uint16_t N, uint8_t Chnl, Inverted_t Inverted, bool EnablePreload);
     void SetPwm(uint16_t Value) { *PCCR = Value; }
 };
+#endif
 
 #if 1 // ======================== External IRQ =================================
 enum ExtiTrigType_t {ttRising, ttFalling, ttRisingFalling};
@@ -336,7 +451,7 @@ public:
 };
 #endif
 
-// ================================= IWDG ======================================
+#if 1 // ============================== IWDG ===================================
 enum IwdgPre_t {
     iwdgPre4 = 0x00,
     iwdgPre8 = 0x01,
@@ -371,6 +486,7 @@ public:
         else return false;
     }
 };
+#endif
 
 #if 1 // ========================== Sleep ======================================
 namespace Sleep {

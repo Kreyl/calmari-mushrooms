@@ -13,9 +13,6 @@
 #include "hal.h"
 #include "kl_lib_f100.h"
 #include "color.h"
-#include "main.h"
-
-#if LED_WS_ENABLE
 
 #define LED_CNT         5
 #define RST_BIT_CNT     45 // 45 zero bits to produce reset
@@ -46,6 +43,5 @@ public:
 };
 
 extern LedWs_t LedWs;
-#endif
 
 #endif /* WS2812B_H_ */

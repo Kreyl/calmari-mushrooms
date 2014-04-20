@@ -9,6 +9,6 @@
 #define EVT_MASK_H_
 
 // Event masks
-#define EVTMSK_RX_TABLE_READY   EVENT_MASK(3)
+#define EVTMSK_RX       EVENT_MASK(1)
 
 #endif /* EVT_MASK_H_ */

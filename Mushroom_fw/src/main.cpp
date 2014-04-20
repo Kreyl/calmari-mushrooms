@@ -28,14 +28,11 @@ int main(void) {
     // ==== Init Hard & Soft ====
     JtagDisable();
     Uart.Init(115200);
-#if LED_RGB_ENABLE
-    Led.Init();
-#endif
-#if LED_WS_ENABLE
+
+    //srand(GetUniqID32());       // Init random generator using MCU uniq ID as seed
     LedWs.Init();
-//    LedWs.SetCommonColorSmoothly(clBlue, csmSimultaneously);
-#endif
-//    Radio.Init();
+    LedWs.SetCommonColorSmoothly(clBlue, csmSimultaneously);
+    Radio.Init();
     App.PThd = chThdSelf();
     App.Init();
 
@@ -57,117 +54,6 @@ void GoSleep() {
     __WFI();
 }
 #endif
-
-// ==== Flash load/save ====
-#define FLASH_PAGE_SIZE     1024
-#define FLASH_KEY1          ((uint32_t)0x45670123)
-#define FLASH_KEY2          ((uint32_t)0xCDEF89AB)
-#define CR_LOCK_Set         ((uint32_t)0x00000080)
-#define CR_PER_Set          ((uint32_t)0x00000002)
-#define CR_PER_Reset        ((uint32_t)0x00001FFD)
-#define CR_STRT_Set         ((uint32_t)0x00000040)
-#define CR_PG_Set           ((uint32_t)0x00000001)
-#define CR_PG_Reset         ((uint32_t)0x00001FFE)
-#define EraseTimeout        ((uint32_t)0x000B0000)
-#define ProgramTimeout      ((uint32_t)0x00002000)
-
-const uint32_t MyBigUint __attribute__ ((section("MyFlash"), aligned(FLASH_PAGE_SIZE))) = 0x00040B04; // 00 BB GG RR
-Color_t *PSavedClr = (Color_t*)&MyBigUint;
-
-void FLASH_Unlock() {
-    FLASH->KEYR = FLASH_KEY1;
-    FLASH->KEYR = FLASH_KEY2;
-}
-void FLASH_Lock(void) { FLASH->CR |= CR_LOCK_Set; }
-void FLASH_ClearFlag(uint32_t FLASH_FLAG) { FLASH->SR = FLASH_FLAG; }
-
-uint8_t FLASH_GetBank1Status(void) {
-    if(FLASH->SR & FLASH_SR_BSY) return BUSY;
-    else if(FLASH->SR & FLASH_SR_PGERR) return FAILURE;
-    else if(FLASH->SR & FLASH_SR_WRPRTERR) return FAILURE;
-    else return OK;
-}
-uint8_t FLASH_WaitForLastOperation(uint32_t Timeout) {
-    uint8_t status = OK;
-    // Wait for a Flash operation to complete or a TIMEOUT to occur
-    do {
-        status = FLASH_GetBank1Status();
-        Timeout--;
-    } while((status == BUSY) and (Timeout != 0x00));
-    if(Timeout == 0x00) status = TIMEOUT;
-    return status;
-}
-
-uint8_t FLASH_ErasePage(uint32_t PageAddress) {
-    uint8_t status = FLASH_WaitForLastOperation(EraseTimeout);
-    if(status == OK) {
-        FLASH->CR |= CR_PER_Set;
-        FLASH->AR = PageAddress;
-        FLASH->CR |= CR_STRT_Set;
-        // Wait for last operation to be completed
-        status = FLASH_WaitForLastOperation(EraseTimeout);
-        // Disable the PER Bit
-        FLASH->CR &= CR_PER_Reset;
-    }
-    return status;
-}
-
-uint8_t FLASH_ProgramWord(uint32_t Address, uint32_t Data) {
-    uint8_t status = FLASH_WaitForLastOperation(ProgramTimeout);
-    if(status == OK) {
-        FLASH->CR |= CR_PG_Set; // program the new first half word
-        *(__IO uint16_t*)Address = (uint16_t)Data;
-        /* Wait for last operation to be completed */
-        status = FLASH_WaitForLastOperation(ProgramTimeout);
-        if(status == OK) {
-            // program the new second half word
-            uint32_t tmp = Address + 2;
-            *(__IO uint16_t*)tmp = Data >> 16;
-            /* Wait for last operation to be completed */
-            status = FLASH_WaitForLastOperation(ProgramTimeout);
-            /* Disable the PG Bit */
-            FLASH->CR &= CR_PG_Reset;
-        }
-        else FLASH->CR &= CR_PG_Reset;  // Disable the PG Bit
-    }
-    return status;
-}
-
-
-void Load(Color_t *PClr) {
-    PClr->Red = PSavedClr->Red;
-    PClr->Green = PSavedClr->Green;
-    PClr->Blue = PSavedClr->Blue;
-}
-
-void Save(Color_t *PClr) {
-    uint8_t status = OK;
-    uint32_t FAddr = (uint32_t)&MyBigUint;
-    FLASH_Unlock();
-    // Erase flash
-    FLASH_ClearFlag(FLASH_SR_EOP | FLASH_SR_PGERR | FLASH_SR_WRPRTERR);   // Clear All pending flags
-    status = FLASH_ErasePage(FAddr);
-    //klPrintf("  Flash erase %u: %u\r", i, FLASHStatus);
-    if(status != OK) {
-        Uart.Printf("  Flash erase error\r");
-        return;
-    }
-    uint32_t *PRAM = (uint32_t*)PClr;    // What to write
-    uint32_t DataWordCount = (sizeof(Color_t) + 3) / 4;
-    chSysLock();
-    for(uint32_t i=0; i<DataWordCount; i++) {
-        status = FLASH_ProgramWord(FAddr, *PRAM);
-        if(status != OK) {
-            Uart.Printf("  Flash write error\r");
-            return;
-        }
-        //else klPrintf("#");
-        FAddr += 4;
-        PRAM++;
-    }
-    FLASH_Lock();
-    chSysUnlock();
-}
 
 // ==== Uart cmd ====
 #if UART_RX_ENABLED

@@ -13,7 +13,6 @@
 #include "hal.h"
 #include "kl_lib_f100.h"
 #include "color.h"
-#include "main.h"
 
 #if LED_RGB_ENABLE
 /*

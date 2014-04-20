@@ -16,14 +16,7 @@
 class rLevel1_t {
 private:
     rPkt_t PktRx, PktTx;
-    Thread *PThread;
-    uint32_t CycleNTotal;
-    bool rxIdTable[DEVICE_ID_MAX+1];
-    void IRxCycle();
-    void ISuperCycle();
-    void IIDAquisition();
 public:
-    id_t SelfID;
     void Init();
     // Inner use
     void ITask();

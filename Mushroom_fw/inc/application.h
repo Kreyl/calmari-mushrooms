@@ -10,6 +10,8 @@
 
 #include "kl_lib_f100.h"
 #include "ch.h"
+#include "evt_mask.h"
+#include "color.h"
 
 #if 1 // ==== Timings ====
 
@@ -18,10 +20,16 @@
 // ==== Application class ====
 class App_t {
 private:
+    Color_t IClr;
 public:
     Thread *PThd;
     void Init();
-    void SendEvtRx() {}
+    void SendEvtRx(uint8_t R, uint8_t G, uint8_t B) {
+        IClr.Red = R;
+        IClr.Green = G;
+        IClr.Blue = B;
+        chEvtSignal(PThd, EVTMSK_RX);
+    }
     // Inner use
     void ITask();
 };

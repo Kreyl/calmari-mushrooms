@@ -31,17 +31,13 @@ void App_t::ITask() {
     while(true) {
 //        LedWs.SetCommonColorSmoothly(clGreen, csmOneByOne);
 //        chThdSleepMilliseconds(18000);
-        LedWs.SetCommonColorSmoothly(clBlue, csmSimultaneously);
-        chThdSleepMilliseconds(7002);
-        LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
-        chThdSleepMilliseconds(7002);
+//        LedWs.SetCommonColorSmoothly(clBlue, csmSimultaneously);
+//        chThdSleepMilliseconds(7002);
+//        LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+//        chThdSleepMilliseconds(7002);
 
-//        uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
-//        // ==== RX table ====
-//        if(EvtMsk & EVTMSK_RX_TABLE_READY) {
-//            //if(RxTable.PTable->Size != 0) ITableHandler();
-//        }
-
+        uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
+        if(EvtMsk & EVTMSK_RX) LedWs.SetCommonColorSmoothly(IClr, csmOneByOne);
     } // while 1
 }
 
