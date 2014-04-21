@@ -15,6 +15,7 @@
 #include "ws2812b.h"
 #include "application.h"
 #include "radio_lvl1.h"
+#include "keys.h"
 
 //static void Load(Color_t *PClr);
 
@@ -31,12 +32,14 @@ int main(void) {
 
     //srand(GetUniqID32());       // Init random generator using MCU uniq ID as seed
     LedWs.Init();
-    LedWs.SetCommonColorSmoothly(clBlue, csmSimultaneously);
+//    LedWs.SetCommonColorSmoothly(clGreen, csmSimultaneously);
     Radio.Init();
+
+    Keys.Init();
     App.PThd = chThdSelf();
     App.Init();
 
-    Uart.Printf("\rMushroom  AHB=%u; APB1=%u; APB2=%u\r\n", Clk.AHBFreqHz, Clk.APB1FreqHz, Clk.APB2FreqHz);
+    Uart.Printf("\rCandle  AHB=%u; APB1=%u; APB2=%u\r\n", Clk.AHBFreqHz, Clk.APB1FreqHz, Clk.APB2FreqHz);
     while(true) App.ITask();
 }
 

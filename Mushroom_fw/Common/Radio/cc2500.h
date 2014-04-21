@@ -33,7 +33,9 @@ private:
     void CsHi() { PinSet(CC_GPIO, CC_CS); }
     void CsLo() { PinClear(CC_GPIO, CC_CS); }
     bool GDO0IsHi() { return PinIsSet(CC_GPIO, CC_GDO0); }
+#ifdef CC_GDO2
     bool GDO2IsHi() { return PinIsSet(CC_GPIO, CC_GDO2); }
+#endif
     void BusyWait() { while(PinIsSet(CC_GPIO, CC_MISO)); }
     // General
     void IHandleAsync();

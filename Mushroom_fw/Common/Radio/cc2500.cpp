@@ -12,13 +12,13 @@ cc2500_t CC;
 
 void cc2500_t::Init(void) {
     // ==== GPIO ====
-    PinSetupOut            (GPIOA, CC_CS,   omPushPull);
-    PinSetupAlterFuncOutput(GPIOA, CC_SCK,  omPushPull);
-    PinSetupAlterFuncOutput(GPIOA, CC_MISO, omPushPull);
-    PinSetupAlterFuncOutput(GPIOA, CC_MOSI, omPushPull);
-    PinSetupIn             (GPIOA, CC_GDO0, pudNone);
+    PinSetupOut            (CC_GPIO, CC_CS,   omPushPull);
+    PinSetupAlterFuncOutput(CC_GPIO, CC_SCK,  omPushPull);
+    PinSetupAlterFuncOutput(CC_GPIO, CC_MISO, omPushPull);
+    PinSetupAlterFuncOutput(CC_GPIO, CC_MOSI, omPushPull);
+    PinSetupIn             (CC_GPIO, CC_GDO0, pudNone);
 #ifdef CC_GDO2
-    PinSetupIn             (GPIOA, CC_GDO2, pudNone);
+    PinSetupIn             (CC_GPIO, CC_GDO2, pudNone);
 #endif
     CsHi();
     // ==== SPI ====    MSB first, master, ClkLowIdle, FirstEdge, Baudrate=f/2
@@ -33,18 +33,6 @@ void cc2500_t::Init(void) {
     // ==== IRQ ====
     IGdo0.Setup(CC_GPIO, CC_GDO0, ttFalling);
     IGdo0.EnableIrq(IRQ_PRIO_LOW);
-//    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN; // Enable AFIO clock
-//    uint8_t tmp = CC_GDO0 / 4;          // Indx of EXTICR register
-//    uint8_t Shift = (CC_GDO0 & 0x03) * 4;
-//    AFIO->EXTICR[tmp] &= ~((uint32_t)0b1111 << Shift);    // Clear bits and leave clear to select GPIOA
-//    tmp = 1<<CC_GDO0;   // IRQ mask
-//    // Configure EXTI line
-//    EXTI->IMR  |=  tmp;      // Interrupt mode enabled
-//    EXTI->EMR  &= ~tmp;      // Event mode disabled
-//    EXTI->RTSR &= ~tmp;      // Rising trigger disabled
-//    EXTI->FTSR |=  tmp;      // Falling trigger enabled
-//    EXTI->PR    =  tmp;      // Clean irq flag
-//    nvicEnableVector(EXTI4_IRQn, CORTEX_PRIORITY_MASK(IRQ_PRIO_MEDIUM));
 }
 
 void cc2500_t::SetChannel(uint8_t AChannel) {

@@ -13,17 +13,18 @@
 #include <cstdlib>
 
 //#define TX
-#ifndef TX
-#define RX
-#endif
+//#define RX
 
-#define DBG_PINS
+//#define DBG_PINS
 
 #ifdef DBG_PINS
 #define DBG_GPIO1   GPIOB
 #define DBG_PIN1    10
 #define DBG1_SET()  PinSet(DBG_GPIO1, DBG_PIN1)
 #define DBG1_CLR()  PinClear(DBG_GPIO1, DBG_PIN1)
+#else
+#define DBG1_SET()
+#define DBG1_CLR()
 #endif
 
 rLevel1_t Radio;
@@ -44,7 +45,6 @@ void rLevel1_t::ITask() {
     DBG1_SET();
     CC.TransmitSync(&PktTx);
     DBG1_CLR();
-
 #elif defined RX
     // ======== RX cycle ========
     int8_t Rssi;
@@ -55,6 +55,22 @@ void rLevel1_t::ITask() {
     }
     CC.Sleep();
     chThdSleepMilliseconds(SLEEP_DURATION_MS);
+#elif defined APP_NAME_CANDLE
+    static bool InSleep = false;
+    if(App.DoTransmit) {
+        InSleep = false;
+        chSysLock();
+        App.Clr.Get(&PktTx.R, &PktTx.G, &PktTx.B);
+        chSysUnlock();
+        DBG1_SET();
+        CC.TransmitSync(&PktTx);
+        DBG1_CLR();
+    }
+    else {
+        if(!InSleep) CC.Sleep();
+        InSleep = true;
+        chThdSleepMilliseconds(540);
+    }
 #endif
 }
 #endif // task

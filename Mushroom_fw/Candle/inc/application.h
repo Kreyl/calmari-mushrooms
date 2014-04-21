@@ -13,32 +13,34 @@
 #include "evt_mask.h"
 #include "color.h"
 
+#define APP_NAME_CANDLE
+
 // ==== LED ====
-#define LED_CNT         5
-#define LED_TMR         TIM15
-#define LED_TMR_CHNL    2
-#define LED_GPIO        GPIOB
-#define LED_PIN         15
-#define LED_DMA_STREAM  STM32_DMA1_STREAM5  // TIM15_UPD
-#define LED_REMAP_TIM15 TRUE
+#define LED_CNT             1
+#define LED_TMR             TIM1
+#define LED_TMR_CHNL        1
+#define LED_GPIO            GPIOA
+#define LED_PIN             8
+#define LED_DMA_STREAM      STM32_DMA1_STREAM5  // TIM1_UPD
 
-#if 1 // ==== Timings ====
+#define LED_SMOOTH_CONST    360 // Lower = faster
 
-#endif
+
+#define LED_OFF_CLR         (Color_t){0, 0, 7}
 
 // ==== Application class ====
 class App_t {
 private:
-    Color_t IClr;
+    uint32_t ColorN = 32;   // Green
 public:
+    Color_t Clr;
     Thread *PThd;
     void Init();
     void SendEvtRx(uint8_t R, uint8_t G, uint8_t B) {
-        IClr.Red = R;
-        IClr.Green = G;
-        IClr.Blue = B;
+        Clr.Set(R, G, B);
         chEvtSignal(PThd, EVTMSK_RX);
     }
+    bool DoTransmit;
     // Inner use
     void ITask();
 };

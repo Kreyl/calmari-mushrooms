@@ -16,6 +16,11 @@
 // Define constants here
 #include "application.h"
 
+// Smooth speed
+#ifndef LED_SMOOTH_CONST
+#define LED_SMOOTH_CONST    810
+#endif
+
 #define LED_DMA_MODE    DMA_PRIORITY_VERYHIGH \
                         | STM32_DMA_CR_MSIZE_BYTE \
                         | STM32_DMA_CR_PSIZE_HWORD \
@@ -39,7 +44,7 @@ private:
     ClrSetupMode_t IMode;
     void AppendBitsMadeOfByte(uint8_t Byte);
     void ISetCurrentColors();
-    uint32_t ICalcDelay(uint16_t AValue) { return (uint32_t)((810 / (AValue+4)) + 1); }
+    uint32_t ICalcDelay(uint16_t AValue) { return (uint32_t)((LED_SMOOTH_CONST / (AValue+4)) + 1); }
     uint32_t ICalcDelayClr();
 public:
     Color_t DesiredClr[LED_CNT];

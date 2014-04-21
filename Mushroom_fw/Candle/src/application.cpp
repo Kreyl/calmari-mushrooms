@@ -6,11 +6,12 @@
  */
 
 #include "application.h"
-//#include "cmd_uart.h"
+#include "cmd_uart_f10x.h"
 #include "evt_mask.h"
 #include "radio_lvl1.h"
 #include "ch.h"
 #include "ws2812b.h"
+#include "keys.h"
 
 App_t App;
 
@@ -37,11 +38,52 @@ void App_t::ITask() {
 //        chThdSleepMilliseconds(7002);
 
         uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
-        if(EvtMsk & EVTMSK_RX) LedWs.SetCommonColorSmoothly(IClr, csmOneByOne);
+//        if(EvtMsk & EVTMSK_RX) LedWs.SetCommonColorSmoothly(Clr, csmOneByOne);
+
+        // ==== Keys ====
+        // Both Up & Down keys pressed
+        if(((EvtMsk & EVTMSK_KEY_UP)   and (Keys.KeyDownIsPressed())) or
+           ((EvtMsk & EVTMSK_KEY_DOWN) and (Keys.KeyUpIsPressed())) ) {
+            Clr = clBlack;
+            Uart.Printf("Off\r");
+            if(Keys.KeyTxIsPressed()) LedWs.SetCommonColorSmoothly(LED_OFF_CLR, csmSimultaneously);
+            else LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+        }
+        else {
+            if(EvtMsk & EVTMSK_KEY_UP) {
+                if(++ColorN >= COLOR_TABLE_SZ) ColorN = 0;
+                Clr = ColorTable[ColorN];
+                Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
+                LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
+            }
+            if(EvtMsk & EVTMSK_KEY_DOWN) {
+                if(ColorN == 0) ColorN = COLOR_TABLE_SZ-1;
+                else ColorN--;
+                Clr = ColorTable[ColorN];
+                Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
+                LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
+            }
+        }
+        // TX button
+        if(EvtMsk & EVTMSK_KEY_TX_PRESS) {
+            Uart.Printf("TX on\r");
+            DoTransmit = true;
+            // Show TX-Off mode
+            if(Clr == clBlack) LedWs.SetCommonColorSmoothly(LED_OFF_CLR, csmSimultaneously);
+        }
+        if(EvtMsk & EVTMSK_KEY_TX_RELEASE) {
+            Uart.Printf("TX off\r");
+            DoTransmit = false;
+            // Hide TX-Off mode
+            if(Clr == clBlack) LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+        }
     } // while 1
 }
 
 void App_t::Init() {
+    Clr = ColorTable[ColorN];
+    LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
+    //Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
     // Timers init
 //    chSysLock();
 ////    chVTSetI(&ITmrPillCheck, MS2ST(TM_PILL_CHECK_MS),    TmrPillCheckCallback, nullptr);
