@@ -45,7 +45,7 @@ void rLevel1_t::ITask() {
     DBG1_SET();
     CC.TransmitSync(&PktTx);
     DBG1_CLR();
-#elif defined RX
+#elif defined APP_NAME_CRYSTAL
     // ======== RX cycle ========
     int8_t Rssi;
     uint8_t RxRslt = CC.ReceiveSync(RX_DURATION_MS, &PktRx, &Rssi);
