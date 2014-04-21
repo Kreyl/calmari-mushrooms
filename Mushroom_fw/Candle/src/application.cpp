@@ -16,11 +16,10 @@
 App_t App;
 
 #if 1 // ============================ Timers ===================================
-//static VirtualTimer ITmrPillCheck;
-void TmrPillCheckCallback(void *p) {
+//static VirtualTimer ITmrSleepCheck;
+void TmrCheckSleepCallback(void *p) {
     chSysLockFromIsr();
-//    chEvtSignalI(App.PThd, EVTMSK_PILL_CHECK);
-//    chVTSetI(&ITmrPillCheck, MS2ST(TM_PILL_CHECK_MS),    TmrPillCheckCallback, nullptr);
+    chEvtSignalI(App.PThd, EVTMSK_SLEEP_CHECK);
     chSysUnlockFromIsr();
 }
 #endif
@@ -40,23 +39,31 @@ void App_t::ITask() {
         uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
 //        if(EvtMsk & EVTMSK_RX) LedWs.SetCommonColorSmoothly(Clr, csmOneByOne);
 
-        // ==== Keys ====
+#if 1 // ==== Keys ====
         // Both Up & Down keys pressed
         if(((EvtMsk & EVTMSK_KEY_UP)   and (Keys.KeyDownIsPressed())) or
            ((EvtMsk & EVTMSK_KEY_DOWN) and (Keys.KeyUpIsPressed())) ) {
-            Clr = clBlack;
-            Uart.Printf("Off\r");
-            if(Keys.KeyTxIsPressed()) LedWs.SetCommonColorSmoothly(LED_OFF_CLR, csmSimultaneously);
-            else LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+            if(Clr != clBlack) {    // Proceed if not black already
+                Clr = clBlack;
+                IResetSleepTmr();
+                Uart.Printf("Off\r");
+                if(Keys.KeyTxIsPressed()) LedWs.SetCommonColorSmoothly(LED_OFF_CLR, csmSimultaneously);
+                else {
+                    LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+                    IStartSleepTmr();
+                }
+            } // if not black
         }
         else {
             if(EvtMsk & EVTMSK_KEY_UP) {
+                IResetSleepTmr();
                 if(++ColorN >= COLOR_TABLE_SZ) ColorN = 0;
                 Clr = ColorTable[ColorN];
                 Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
                 LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
             }
             if(EvtMsk & EVTMSK_KEY_DOWN) {
+                IResetSleepTmr();
                 if(ColorN == 0) ColorN = COLOR_TABLE_SZ-1;
                 else ColorN--;
                 Clr = ColorTable[ColorN];
@@ -66,6 +73,7 @@ void App_t::ITask() {
         }
         // TX button
         if(EvtMsk & EVTMSK_KEY_TX_PRESS) {
+            IResetSleepTmr();
             Uart.Printf("TX on\r");
             DoTransmit = true;
             // Show TX-Off mode
@@ -75,7 +83,15 @@ void App_t::ITask() {
             Uart.Printf("TX off\r");
             DoTransmit = false;
             // Hide TX-Off mode
-            if(Clr == clBlack) LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+            if(Clr == clBlack) {
+                LedWs.SetCommonColorSmoothly(clBlack, csmSimultaneously);
+                IStartSleepTmr();
+            }
+        }
+#endif
+        // Sleep timer
+        if(EvtMsk & EVTMSK_SLEEP_CHECK) {
+            Uart.Printf("sleep\r");
         }
     } // while 1
 }
@@ -84,10 +100,6 @@ void App_t::Init() {
     Clr = ColorTable[ColorN];
     LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
     //Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
-    // Timers init
-//    chSysLock();
-////    chVTSetI(&ITmrPillCheck, MS2ST(TM_PILL_CHECK_MS),    TmrPillCheckCallback, nullptr);
-//    chSysUnlock();
 }
 
 #endif

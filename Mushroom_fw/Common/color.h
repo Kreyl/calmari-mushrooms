@@ -11,7 +11,7 @@
 struct Color_t {
     uint8_t Red, Green, Blue;
     bool operator == (const Color_t AColor) { return ((Red == AColor.Red) and (Green == AColor.Green) and (Blue == AColor.Blue)); }
-    //bool operator != (const Color_t AColor) { return ((this->Red != AColor.Red) || (this->Green != AColor.Green) || (this->Blue != AColor.Blue)); }
+    bool operator != (const Color_t AColor) { return ((Red != AColor.Red) or  (Green != AColor.Green) or  (Blue != AColor.Blue)); }
     void operator = (const Color_t AColor) { Red = AColor.Red; Green = AColor.Green; Blue = AColor.Blue; }
     void Adjust(const Color_t *PColor) {
         if     (Red   < PColor->Red  ) Red++;

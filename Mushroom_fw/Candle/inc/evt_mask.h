@@ -17,5 +17,7 @@
 #define EVTMSK_KEY_TX_PRESS     EVENT_MASK(4)
 #define EVTMSK_KEY_TX_RELEASE   EVENT_MASK(5)
 
+#define EVTMSK_SLEEP_CHECK      EVENT_MASK(6)
+
 
 #endif /* EVT_MASK_H_ */
