@@ -14,6 +14,7 @@
 #include "keys.h"
 
 App_t App;
+IWDG_t Iwdg;
 
 #if 1 // ============================ Timers ===================================
 //static VirtualTimer ITmrSleepCheck;
@@ -95,6 +96,8 @@ void App_t::ITask() {
         // Sleep timer
         if(EvtMsk & EVTMSK_SLEEP_CHECK) {
             Uart.Printf("sleep %u\r", BKP->DR1);
+            chThdSleepMilliseconds(99);
+            Iwdg.GoSleepFor(SLEEP_TIME_MS);
         }
     } // while 1
 }
@@ -107,11 +110,14 @@ void App_t::Init() {
     //Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
 }
 
-void App_t::SaveColor2Bkp() { BKP->DR1 = ColorN; }
+void App_t::SaveColor2Bkp() {
+    BKP->DR1 = ColorN;
+    BKP->DR2 = (Clr == clBlack)? 1 : 0;
+}
 void App_t::LoadColorBkp() {
     ColorN = BKP->DR1;
     if(ColorN >= COLOR_TABLE_SZ) ColorN = 0;
-    Clr = ColorTable[ColorN];
+    Clr = (BKP->DR2 == 1)? clBlack : ColorTable[ColorN];
 }
 
 #endif

@@ -493,6 +493,16 @@ public:
         }
         else return false;
     }
+    void GoSleepFor(uint32_t ATimeout_ms) {
+        Clk.LsiEnable();            // Start LSI
+        SetTimeout(ATimeout_ms);    // Start IWDG
+        Enable();
+        // Enter standby mode
+        SCB->SCR |= SCB_SCR_SLEEPDEEP;
+        PWR->CR = PWR_CR_PDDS;
+        PWR->CR |= PWR_CR_CWUF;
+        __WFI();
+    }
 };
 #endif
 

@@ -17,9 +17,21 @@
 #include "radio_lvl1.h"
 #include "keys.h"
 
-//static void Load(Color_t *PClr);
+extern IWDG_t Iwdg;
 
 int main(void) {
+    // Check if Iwdg reset occured
+    if(Iwdg.ResetOccured()) {
+        Clk.UpdateFreqValues();
+        // Init key pins
+        PinSetupIn(GPIOB, 6, pudPullUp);
+        PinSetupIn(GPIOB, 7, pudPullUp);
+        PinSetupIn(GPIOA, 1, pudPullUp);
+        Delay_ms(2);
+        // Get back to sleep if nothing pressed
+        if(PinIsSet(GPIOB, 6) and PinIsSet(GPIOB, 7) and PinIsSet(GPIOA, 1)) Iwdg.GoSleepFor(SLEEP_TIME_MS);
+    }
+
     // ==== Init clock system ====
     Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1);
     Clk.UpdateFreqValues();

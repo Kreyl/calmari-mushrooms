@@ -28,6 +28,7 @@
 
 // ==== Timings ====
 #define CHECK_SLEEP_PERIOD_MS   4500
+#define SLEEP_TIME_MS           999
 
 // ==== Application class ====
 void TmrCheckSleepCallback(void *p);
