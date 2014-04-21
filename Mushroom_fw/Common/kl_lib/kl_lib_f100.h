@@ -245,7 +245,7 @@ public:
 const uint32_t MyBigUint __attribute__ ((section("MyFlash"), aligned(FLASH_PAGE_SIZE))) = 0x00040B04; // 00 BB GG RR
 Color_t *PSavedClr = (Color_t*)&MyBigUint;
 
-class Flsh_t {
+class Flash_t {
 public:
     void Unlock() {
         FLASH->KEYR = FLASH_KEY1;
@@ -338,6 +338,14 @@ public:
         Lock();
         chSysUnlock();
     }
+};
+#endif
+
+#if 1 // ========================= Backup registers ============================
+class Bkp_t {
+public:
+    static void EnableWriteAccess() { PWR->CR |= PWR_CR_DBP; }
+//    static void Enable() { Rcc
 };
 #endif
 

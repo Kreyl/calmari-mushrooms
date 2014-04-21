@@ -41,6 +41,8 @@ private:
         chSysUnlock();
     }
     void IResetSleepTmr() { chVTReset(&ITmrSleepCheck); }
+    void SaveColor2Bkp();
+    void LoadColorBkp();
 
     void EnterLowPower() {
         Clk.SetupBusDividers(ahbDiv8, apbDiv1, apbDiv1);

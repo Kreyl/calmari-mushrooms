@@ -45,6 +45,7 @@ void App_t::ITask() {
            ((EvtMsk & EVTMSK_KEY_DOWN) and (Keys.KeyUpIsPressed())) ) {
             if(Clr != clBlack) {    // Proceed if not black already
                 Clr = clBlack;
+                SaveColor2Bkp();
                 IResetSleepTmr();
                 Uart.Printf("Off\r");
                 if(Keys.KeyTxIsPressed()) LedWs.SetCommonColorSmoothly(LED_OFF_CLR, csmSimultaneously);
@@ -59,6 +60,7 @@ void App_t::ITask() {
                 IResetSleepTmr();
                 if(++ColorN >= COLOR_TABLE_SZ) ColorN = 0;
                 Clr = ColorTable[ColorN];
+                SaveColor2Bkp();
                 Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
                 LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
             }
@@ -67,6 +69,7 @@ void App_t::ITask() {
                 if(ColorN == 0) ColorN = COLOR_TABLE_SZ-1;
                 else ColorN--;
                 Clr = ColorTable[ColorN];
+                SaveColor2Bkp();
                 Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
                 LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
             }
@@ -91,15 +94,23 @@ void App_t::ITask() {
 #endif
         // Sleep timer
         if(EvtMsk & EVTMSK_SLEEP_CHECK) {
-            Uart.Printf("sleep\r");
+            Uart.Printf("sleep %u\r", BKP->DR1);
         }
     } // while 1
 }
 
 void App_t::Init() {
-    Clr = ColorTable[ColorN];
+    Bkp_t::EnableWriteAccess();
+    LoadColorBkp();
     LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);
     //Uart.Printf("%u; %u %u %u\r", ColorN, Clr.Red, Clr.Green, Clr.Blue);
+}
+
+void App_t::SaveColor2Bkp() { BKP->DR1 = ColorN; }
+void App_t::LoadColorBkp() {
+    ColorN = BKP->DR1;
+    if(ColorN >= COLOR_TABLE_SZ) ColorN = 0;
+    Clr = ColorTable[ColorN];
 }
 
 #endif
