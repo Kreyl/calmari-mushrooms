@@ -34,12 +34,11 @@ int main(void) {
     LedWs.Init();
 //    LedWs.SetCommonColorSmoothly(clGreen, csmSimultaneously);
     Radio.Init();
-
     Keys.Init();
     App.PThd = chThdSelf();
+    Uart.Printf("\rCandle  AHB=%u; APB1=%u; APB2=%u\r\n", Clk.AHBFreqHz, Clk.APB1FreqHz, Clk.APB2FreqHz);
     App.Init();
 
-    Uart.Printf("\rCandle  AHB=%u; APB1=%u; APB2=%u\r\n", Clk.AHBFreqHz, Clk.APB1FreqHz, Clk.APB2FreqHz);
     while(true) App.ITask();
 }
 

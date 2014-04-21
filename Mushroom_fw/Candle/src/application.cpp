@@ -100,6 +100,7 @@ void App_t::ITask() {
 }
 
 void App_t::Init() {
+    Bkp_t::Enable();
     Bkp_t::EnableWriteAccess();
     LoadColorBkp();
     LedWs.SetCommonColorSmoothly(Clr, csmSimultaneously);

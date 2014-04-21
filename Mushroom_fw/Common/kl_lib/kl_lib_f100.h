@@ -345,7 +345,7 @@ public:
 class Bkp_t {
 public:
     static void EnableWriteAccess() { PWR->CR |= PWR_CR_DBP; }
-//    static void Enable() { Rcc
+    static void Enable() { RCC->APB1ENR |= RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN; }
 };
 #endif
 
