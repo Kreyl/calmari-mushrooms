@@ -53,30 +53,3 @@ int main(void) {
 
     while(true) App.ITask();
 }
-
-#if AUTO_OFF
-void GoSleep() {
-    // Start LSI
-    Clk.LsiEnable();
-    // Start IWDG
-    Iwdg.SetTimeout(4500);
-    Iwdg.Enable();
-    // Enter standby mode
-    SCB->SCR |= SCB_SCR_SLEEPDEEP;
-    PWR->CR = PWR_CR_PDDS;
-    PWR->CR |= PWR_CR_CWUF;
-    __WFI();
-}
-#endif
-
-// ==== Uart cmd ====
-#if UART_RX_ENABLED
-void UartCmdCallback(uint8_t R, uint8_t G, uint8_t B) {
-    Uart.Printf("R=%u; G=%u; B=%u\r", R, G, B);
-    Clr.Red = R;
-    Clr.Green = G;
-    Clr.Blue = B;
-    //Led.SetColorNow(Clr);
-    //Save(&Clr);
-}
-#endif

@@ -19,5 +19,8 @@
 
 #define EVTMSK_SLEEP_CHECK      EVENT_MASK(6)
 
+#define EVTMSK_CHARGE_START     EVENT_MASK(7)
+#define EVTMSK_CHARGE_END       EVENT_MASK(8)
+
 
 #endif /* EVT_MASK_H_ */

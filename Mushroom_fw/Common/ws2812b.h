@@ -50,7 +50,7 @@ public:
     Color_t DesiredClr[LED_CNT];
     void Init();
     void SetCommonColor(Color_t Clr);
-    void SetCommonColorSmoothly(Color_t Clr, ClrSetupMode_t AMode);
+    void SetCommonColorSmoothly(Color_t Clr, ClrSetupMode_t AMode = csmSimultaneously);
     // Inner use
     void IStopTx() { TxTmr.SetPwm(0); TxTmr.Disable(); }
     void ITmrHandler();

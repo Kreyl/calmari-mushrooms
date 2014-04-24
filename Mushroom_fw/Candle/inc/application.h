@@ -25,6 +25,8 @@
 
 #define LED_SMOOTH_CONST    360 // Lower = faster
 #define LED_OFF_CLR         (Color_t){0, 0, 7}
+#define LED_CHARGING_CLR    (Color_t){4, 0, 0}
+#define LED_CHARGING_DONE   (Color_t){0, 7, 0}
 
 // ==== Timings ====
 #define CHECK_SLEEP_PERIOD_MS   4500
@@ -45,12 +47,9 @@ private:
     void SaveColor2Bkp();
     void LoadColorBkp();
 
-    void EnterLowPower() {
-        Clk.SetupBusDividers(ahbDiv8, apbDiv1, apbDiv1);
-    }
-    void EnterNormalPower() {
-        Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1);
-    }
+    void EnterLowPower()    { Clk.SetupBusDividers(ahbDiv8, apbDiv1, apbDiv1); }
+    void EnterNormalPower() { Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); }
+    bool IsCharging;
 public:
     Color_t Clr;
     Thread *PThd;
