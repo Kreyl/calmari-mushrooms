@@ -15,11 +15,10 @@
 App_t App;
 
 #if 1 // ============================ Timers ===================================
-//static VirtualTimer ITmrPillCheck;
-void TmrPillCheckCallback(void *p) {
+//static VirtualTimer ITmrSleepCheck;
+void TmrCheckSleepCallback(void *p) {
     chSysLockFromIsr();
-//    chEvtSignalI(App.PThd, EVTMSK_PILL_CHECK);
-//    chVTSetI(&ITmrPillCheck, MS2ST(TM_PILL_CHECK_MS),    TmrPillCheckCallback, nullptr);
+    chEvtSignalI(App.PThd, EVTMSK_SLEEP_CHECK);
     chSysUnlockFromIsr();
 }
 #endif
@@ -37,7 +36,17 @@ void App_t::ITask() {
 //        chThdSleepMilliseconds(7002);
 
         uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
-        if(EvtMsk & EVTMSK_RX) LedWs.SetCommonColorSmoothly(IClr, csmOneByOne);
+        if(EvtMsk & EVTMSK_RX) {
+            if(IClr == clBlack) IStartSleepTmr();
+            else EnterNormalPower();
+            LedWs.SetCommonColorSmoothly(IClr, csmOneByOne);
+        }
+        // Sleep timer
+        if(EvtMsk & EVTMSK_SLEEP_CHECK) {
+            Uart.Printf("Sleep %u\r", BKP->DR1);
+            chThdSleepMilliseconds(99);
+            EnterLowPower();
+        }
     } // while 1
 }
 
