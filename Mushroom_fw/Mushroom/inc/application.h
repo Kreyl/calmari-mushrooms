@@ -33,15 +33,6 @@ void TmrCheckSleepCallback(void *p);
 class App_t {
 private:
     Color_t IClr;
-    VirtualTimer ITmrSleepCheck;
-    void IStartSleepTmr() {
-        chSysLock();
-        chVTSetI(&ITmrSleepCheck, MS2ST(CHECK_SLEEP_PERIOD_MS), TmrCheckSleepCallback, nullptr);
-        chSysUnlock();
-    }
-    void IResetSleepTmr() { chVTReset(&ITmrSleepCheck); }
-    void EnterLowPower()    { Clk.SetupBusDividers(ahbDiv8, apbDiv1, apbDiv1); }
-    void EnterNormalPower() { Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); }
 public:
     Thread *PThd;
     void Init();

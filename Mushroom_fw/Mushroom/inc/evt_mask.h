@@ -10,6 +10,5 @@
 
 // Event masks
 #define EVTMSK_RX           EVENT_MASK(1)
-#define EVTMSK_SLEEP_CHECK  EVENT_MASK(2)
 
 #endif /* EVT_MASK_H_ */

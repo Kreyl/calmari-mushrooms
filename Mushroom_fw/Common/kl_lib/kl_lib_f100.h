@@ -33,6 +33,9 @@ void __attribute__ ((weak)) _init(void)  {}
 #define FALSE 0
 #endif
 
+// Functional types
+typedef void (*ftVoiVoid)(void);
+
 // Return values
 #define OK              0
 #define FAILURE         1

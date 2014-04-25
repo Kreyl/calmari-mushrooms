@@ -48,6 +48,7 @@ private:
     uint32_t ICalcDelayClr();
 public:
     Color_t DesiredClr[LED_CNT];
+    ftVoiVoid OnSmoothStart, OnSmoothEnd;
     void Init();
     void SetCommonColor(Color_t Clr);
     void SetCommonColorSmoothly(Color_t Clr, ClrSetupMode_t AMode = csmSimultaneously);

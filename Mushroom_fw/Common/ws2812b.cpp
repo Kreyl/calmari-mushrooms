@@ -55,6 +55,7 @@ void LedWs_t::SetCommonColor(Color_t Clr) {
 }
 
 void LedWs_t::SetCommonColorSmoothly(Color_t Clr, ClrSetupMode_t AMode) {
+    if(OnSmoothStart != nullptr) OnSmoothStart();
     chVTReset(&ITmr);
     IMode = AMode;
     for(uint32_t i=0; i<LED_CNT; i++) DesiredClr[i] = Clr;
@@ -66,7 +67,10 @@ void LedWs_t::ITmrHandler() {
 //    Uart.Printf("I1=%u\r", Indx);
     while(IClr[Indx] == DesiredClr[Indx]) {
         Indx++;
-        if(Indx >= LED_CNT) return; // Setup completed
+        if(Indx >= LED_CNT) {
+            if(OnSmoothEnd != nullptr) OnSmoothEnd();
+            return; // Setup completed
+        }
     }
     uint32_t Delay = ICalcDelayClr();
     // Adjust color(s) depending on mode
